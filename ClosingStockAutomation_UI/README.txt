@@ -29,3 +29,13 @@ API local:
 
 Logic convert dung chung nam trong app/converter_core.py.
 Bon entry point trong app/ chi con cau hinh profile va goi core.
+
+Task runner giong npm run:
+   python -m pip install -e ".[tasks]"
+   poe setup
+   poe server
+
+Task nhanh:
+   poe server          -> chay UI local
+   poe convert         -> chay ca 4 profile va publish Network
+   poe frontend-build  -> build giao dien React

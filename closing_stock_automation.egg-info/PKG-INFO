@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: closing-stock-automation
+Version: 0.1.0
+Summary: CSV to Parquet automation with a local control UI
+Requires-Python: >=3.11
+Requires-Dist: duckdb>=1.1
+Requires-Dist: fastapi>=0.115
+Requires-Dist: uvicorn>=0.30
+Provides-Extra: tasks
+Requires-Dist: poethepoet>=0.31; extra == "tasks"

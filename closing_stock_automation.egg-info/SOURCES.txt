@@ -1,0 +1,6 @@
+pyproject.toml
+closing_stock_automation.egg-info/PKG-INFO
+closing_stock_automation.egg-info/SOURCES.txt
+closing_stock_automation.egg-info/dependency_links.txt
+closing_stock_automation.egg-info/requires.txt
+closing_stock_automation.egg-info/top_level.txt

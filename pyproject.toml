@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "closing-stock-automation"
+version = "0.1.0"
+description = "CSV to Parquet automation with a local control UI"
+requires-python = ">=3.11"
+dependencies = [
+    "duckdb>=1.1",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+]
+
+[project.optional-dependencies]
+tasks = [
+    "poethepoet>=0.31",
+]
+
+[tool.poe.tasks]
+server = { cmd = "python ClosingStockAutomation_UI/server.py", help = "Start the local web UI server" }
+start = { ref = "server", help = "Alias for server" }
+convert = { cmd = "python -m app.run_All", help = "Convert all four profiles and publish outputs" }
+frontend-install = { cmd = "npm install", cwd = "ClosingStockAutomation_UI/dataflow", help = "Install frontend dependencies" }
+frontend-build = { cmd = "npm run build", cwd = "ClosingStockAutomation_UI/dataflow", help = "Build the React frontend" }
+setup = ["frontend-install", "frontend-build"]
+
+[tool.setuptools]
+py-modules = []
