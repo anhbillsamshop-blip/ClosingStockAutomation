@@ -1,117 +1,87 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export default function useConversion(initialFiles = [], addLog) {
+export default function useConversion(initialFiles = [], addLog, outputDirectory, sourceDirectory) {
   const [files, setFiles] = useState(initialFiles);
   const [isProcessing, setIsProcessing] = useState(false);
+  const jobs = useRef(new Map());
 
-  const startConversion = (fileId) => {
-    setFiles((prev) =>
-      prev.map((file) => {
-        if (
-          file.id === fileId &&
-          ['pending', 'stopped', 'error'].includes(file.status)
-        ) {
-          addLog(`Started conversion for ${file.name}`, 'info');
+  const startConversion = async (fileIdOrIds) => {
+    const fileIds = Array.isArray(fileIdOrIds) ? fileIdOrIds : [fileIdOrIds];
+    const selectedFiles = files.filter((item) => (
+      fileIds.includes(item.id) && ['pending', 'stopped', 'error'].includes(item.status)
+    ));
+    if (selectedFiles.length === 0) return;
 
-          return {
-            ...file,
-            status: 'converting',
-            progress: 0,
-            log: [`Started reading ${file.name}...`],
-          };
-        }
-
-        return file;
-      })
-    );
-
+    setFiles((previous) => previous.map((item) => (
+      selectedFiles.some((file) => file.id === item.id)
+        ? { ...item, status: 'converting', progress: 5, log: ['Đang gửi file tới converter...'] }
+        : item
+    )));
     setIsProcessing(true);
+    addLog(`Bắt đầu convert ${selectedFiles.length} file`, 'info');
+
+    try {
+      const response = await fetch('/api/convert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          files: selectedFiles,
+          output_folder: outputDirectory,
+          source_directory: sourceDirectory,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Không thể bắt đầu convert');
+      jobs.current.set(data.job_id, selectedFiles.map((file) => file.id));
+    } catch (error) {
+      setFiles((previous) => previous.map((item) => (
+        selectedFiles.some((file) => file.id === item.id)
+          ? { ...item, status: 'error', log: [...item.log, error.message] }
+          : item
+      )));
+      addLog(`Convert lỗi: ${error.message}`, 'error');
+    }
   };
 
   const stopConversion = (fileId) => {
-    setFiles((prev) =>
-      prev.map((file) => {
-        if (file.id === fileId && file.status === 'converting') {
-          addLog(`Stopped conversion for ${file.name}`, 'warning');
-
-          return {
-            ...file,
-            status: 'stopped',
-            log: [...file.log, 'Conversion aborted by user.'],
-          };
-        }
-
-        return file;
-      })
-    );
+    for (const [jobId, fileIds] of jobs.current) {
+      if (fileIds.includes(fileId)) {
+        fetch('/api/stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: jobId }),
+        }).catch(() => {});
+      }
+    }
+    setFiles((previous) => previous.map((item) => (
+      item.id === fileId && item.status === 'converting'
+        ? { ...item, status: 'stopped', log: [...item.log, 'Đã dừng theo yêu cầu.'] }
+        : item
+    )));
+    addLog('Đã gửi yêu cầu dừng convert.', 'warning');
   };
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setFiles((prevFiles) => {
-        let anyConverting = false;
-
-        const newFiles = prevFiles.map((file) => {
-          if (file.status !== 'converting') return file;
-
-          anyConverting = true;
-
-          const nextProgress = Math.min(
-            file.progress + Math.floor(Math.random() * 15 + 5),
-            100
-          );
-
-          const newLog = [...file.log];
-
-          if (nextProgress >= 20 && file.progress < 20) {
-            newLog.push('Inferring schema...');
+    const interval = setInterval(async () => {
+      for (const [jobId, fileIds] of jobs.current) {
+        try {
+          const response = await fetch(`/api/status/${jobId}`);
+          const job = await response.json();
+          setFiles((previous) => previous.map((item) => {
+            if (!fileIds.includes(item.id)) return item;
+            const state = job.files?.[item.id];
+            return state ? { ...item, ...state, log: state.log || item.log } : item;
+          }));
+          if (!job.running) {
+            jobs.current.delete(jobId);
+            if (job.result?.success) addLog('Convert hoàn tất.', 'success');
+            if (job.result && !job.result.success) addLog(job.result.error, 'error');
           }
-
-          if (nextProgress >= 50 && file.progress < 50) {
-            newLog.push('Writing Parquet chunks...');
-          }
-
-          if (nextProgress >= 80 && file.progress < 80) {
-            newLog.push('Optimizing file size...');
-          }
-
-          if (nextProgress === 100) {
-            addLog(`Successfully converted ${file.name} to Parquet.`, 'success');
-            newLog.push('Conversion complete.');
-
-            return {
-              ...file,
-              status: 'completed',
-              progress: 100,
-              log: newLog,
-            };
-          }
-
-          if (Math.random() < 0.02 && nextProgress < 90) {
-            addLog(
-              `Error converting ${file.name}: Corrupt row detected.`,
-              'error'
-            );
-
-            newLog.push('ERROR: Data type mismatch in column 14.');
-
-            return {
-              ...file,
-              status: 'error',
-              log: newLog,
-            };
-          }
-
-          return {
-            ...file,
-            progress: nextProgress,
-            log: newLog,
-          };
-        });
-
-        setIsProcessing(anyConverting);
-        return newFiles;
-      });
+        } catch (error) {
+          addLog(`Không đọc được trạng thái convert: ${error.message}`, 'error');
+        }
+      }
+      setIsProcessing(jobs.current.size > 0);
     }, 1000);
 
     return () => clearInterval(interval);

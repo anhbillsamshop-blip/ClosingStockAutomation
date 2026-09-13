@@ -10,6 +10,9 @@ export default function Workspace({
   handleSelectFile,
   startConversion,
   stopConversion,
+  onCheck,
+  checkedFile,
+  onCloseCheck,
 }) {
   return (
     <section className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
@@ -49,6 +52,9 @@ export default function Workspace({
         handleSelectFile={handleSelectFile}
         startConversion={startConversion}
         stopConversion={stopConversion}
+        onCheck={onCheck}
+        checkedFile={checkedFile}
+        onCloseCheck={onCloseCheck}
       />
     </section>
   );

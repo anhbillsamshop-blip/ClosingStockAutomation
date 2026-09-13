@@ -14,5 +14,16 @@ test_output/
 *.log
 
 __pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+node_modules/
+.npm/
+npm-debug.log*
+.vercel/
 .vscode/
-.env
+.env*
+!.env.example
+.DS_Store
+Thumbs.db
+*_normalized.tmp.csv

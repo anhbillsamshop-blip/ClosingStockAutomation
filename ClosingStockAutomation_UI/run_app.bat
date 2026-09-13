@@ -1,15 +1,12 @@
 @echo off
 setlocal
 
-set "PROJECT_ROOT=C:\ClosingStockAutomation"
-set "APP_DIR=%PROJECT_ROOT%\ClosingStockAutomation_HTML"
+set "PROJECT_ROOT=%~dp0.."
+set "APP_DIR=%~dp0"
 set "PYTHON=%PROJECT_ROOT%\.venv\Scripts\python.exe"
 
 if not exist "%PYTHON%" (
-    echo KHONG TIM THAY PYTHON:
-    echo %PYTHON%
-    pause
-    exit /b 1
+    set "PYTHON=python"
 )
 
 cd /d "%APP_DIR%"
