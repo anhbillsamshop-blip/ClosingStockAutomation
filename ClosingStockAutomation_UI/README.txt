@@ -39,3 +39,18 @@ Task nhanh:
    poe server          -> chay UI local
    poe convert         -> chay ca 4 profile va publish Network
    poe frontend-build  -> build giao dien React
+   poe package         -> tao release/ClosingStockAutomation.exe
+
+Dong goi cho may khac (Windows):
+   1. Chay package.bat tren may phat trien. Lenh nay build frontend va backend vao mot file .exe.
+   2. Gui file release/ClosingStockAutomation.exe sang may dich.
+   3. May dich chi can mo file .exe, khong can cai Node.js, Python hay package nao.
+
+Khi code thay doi, chi can chay lai package.bat (hoac poe package) de tao ban .exe moi.
+May build can co Node.js va moi truong Python .venv; may dich khong can hai thu nay.
+
+Chay cho may khac trong cung LAN:
+   1. Chay server tren may host bang: poe server
+   2. Lay IPv4 cua may host bang lenh: ipconfig
+   3. May khac mo: http://<IPv4-MAY-HOST>:3001/
+   4. Neu khong truy cap duoc, mo TCP port 3001 tren Windows Firewall.

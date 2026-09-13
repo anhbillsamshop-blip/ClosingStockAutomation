@@ -17,6 +17,9 @@ dependencies = [
 tasks = [
     "poethepoet>=0.31",
 ]
+build = [
+    "pyinstaller>=6.0",
+]
 
 [tool.poe.tasks]
 server = { cmd = "python ClosingStockAutomation_UI/server.py", help = "Start the local web UI server" }
@@ -24,6 +27,7 @@ start = { ref = "server", help = "Alias for server" }
 convert = { cmd = "python -m app.run_All", help = "Convert all four profiles and publish outputs" }
 frontend-install = { cmd = "npm install", cwd = "ClosingStockAutomation_UI/dataflow", help = "Install frontend dependencies" }
 frontend-build = { cmd = "npm run build", cwd = "ClosingStockAutomation_UI/dataflow", help = "Build the React frontend" }
+package = { cmd = "package.bat", help = "Build the standalone Windows executable" }
 setup = ["frontend-install", "frontend-build"]
 
 [tool.setuptools]

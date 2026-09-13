@@ -6,8 +6,12 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
-PROJECT_ROOT = ROOT.parent
+if getattr(sys, "frozen", False):
+    PROJECT_ROOT = Path(sys._MEIPASS)
+    ROOT = PROJECT_ROOT / "ClosingStockAutomation_UI"
+else:
+    ROOT = Path(__file__).resolve().parent
+    PROJECT_ROOT = ROOT.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -257,5 +261,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print("Python backend: http://127.0.0.1:3001")
-    ThreadingHTTPServer(("127.0.0.1", 3001), Handler).serve_forever()
+    host = "0.0.0.0"
+    port = 3001
+    print(f"Python backend: http://127.0.0.1:{port}")
+    print(f"LAN access: http://<HOST-PC-IP>:{port}")
+    ThreadingHTTPServer((host, port), Handler).serve_forever()
