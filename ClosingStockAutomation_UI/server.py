@@ -137,7 +137,7 @@ class Handler(BaseHTTPRequestHandler):
                 today = datetime.now()
                 for profile, date_text in profiles_for_date(today):
                     pattern = f"{profile.prefix}{date_text}*.csv"
-                    candidates = [path for path in folder.glob(pattern) if path.is_file()]
+                    candidates = [path for path in folder.rglob(pattern) if path.is_file()]
                     if profile.timestamp_format == "%Y%m%d":
                         candidates = [path for path in candidates if path.stem == f"{profile.prefix}{date_text}"]
                     path = max(candidates, key=lambda item: item.stat().st_mtime) if candidates else None
@@ -180,10 +180,19 @@ class Handler(BaseHTTPRequestHandler):
                             for item in selected
                         },
                     }
+
                 output_folder = Path(body.get("output_folder") or DEFAULT_OUTPUT_FOLDER)
-                network_output = Path(body.get("source_directory") or "")
+
+                # OUTPUT CUỐI CÙNG TRÊN NETWORK
+                network_output = Path(
+                    r"\\masan.local\15. Khoi Logistics\15.4 Dat hang & Kiem soat ton kho"
+                    r"\15.4.4 KSTK WinMart Plus\2.TeamKSTK"
+                    r"\02. Kiểm soát ĐH\08. KSDH MN\anhntp4\Output"
+                )
+
                 if not network_output.is_dir():
-                    return self._json(400, {"message": "Shared Drive Directory không tồn tại hoặc chưa được chọn."})
+                    return self._json(400, {"message": "Không truy cập được thư mục Network Output."})
+
                 threading.Thread(
                     target=run_conversion_job,
                     args=(job_id, selected, output_folder, network_output),

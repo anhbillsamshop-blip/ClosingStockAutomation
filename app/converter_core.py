@@ -15,7 +15,6 @@ import duckdb
 Log = Callable[[str], None]
 
 
-
 @dataclass(frozen=True)
 class ConverterProfile:
     key: str
@@ -70,7 +69,7 @@ PROFILES = {
         key="SCCT",
         title="SCCT",
         prefix="SCCT_RAWDATA_LD_WMP_",
-        input_folder=Path(r"\\masan.local\15. Khoi Logistics\99.15.9 RAW"),
+        input_folder=Path(r"\\masan.local\15. Khoi Logistics\99.15.1. Inputdata\99.15.9 RAW"),
         delimiter=",",
         timestamp_format="%Y%m%d",
         all_varchar=False,
@@ -217,6 +216,7 @@ def find_latest_file(
     logger: Log = print,
 ) -> Path:
     folder = input_folder or profile.input_folder
+
     if not folder.exists() or not folder.is_dir():
         raise FileNotFoundError(f"Folder nguồn không tồn tại: {folder}")
 
@@ -224,24 +224,36 @@ def find_latest_file(
         rf"^{re.escape(profile.prefix)}(\d{{{len(datetime.now().strftime(profile.timestamp_format))}}})\.csv$",
         re.IGNORECASE,
     )
+
     latest: tuple[datetime, Path] | None = None
-    for candidate in folder.glob(f"{profile.prefix}*.csv"):
+
+    # Scan cả folder hiện tại và toàn bộ folder con.
+    for candidate in folder.rglob(f"{profile.prefix}*.csv"):
+        if not candidate.is_file():
+            continue
+
         match = regex.match(candidate.name)
         if not match:
             continue
+
         try:
-            stamp = datetime.strptime(match.group(1), profile.timestamp_format)
+            stamp = datetime.strptime(
+                match.group(1),
+                profile.timestamp_format,
+            )
         except ValueError:
             continue
+
         if latest is None or stamp > latest[0]:
             latest = (stamp, candidate)
 
     if latest is None:
-        raise FileNotFoundError(f"Không tìm thấy file {profile.title} đúng format trong {folder}")
+        raise FileNotFoundError(
+            f"Không tìm thấy file {profile.title} đúng format trong {folder}"
+        )
 
     _log(logger, f"File {profile.title} mới nhất: {latest[1].name}")
     return latest[1]
-
 
 def clear_old_output(output_folder: Path, profile: ConverterProfile, logger: Log = print) -> None:
     output_folder.mkdir(parents=True, exist_ok=True)
