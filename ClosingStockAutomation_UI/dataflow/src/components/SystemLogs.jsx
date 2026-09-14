@@ -62,7 +62,8 @@ export default function SystemLogs({ globalLog, setGlobalLog, files }) {
   // Container chứa scrollbar
   const logContainerRef = useRef(null);
 
-  // Giữ trạng thái: user có đang ở gần cuối log hay không
+  // true = user đang ở cuối log
+  // false = user đang kéo lên xem log cũ
   const isAtBottomRef = useRef(true);
 
   const selectedFile = files.find((file) => file.id === activeLog);
@@ -90,7 +91,7 @@ export default function SystemLogs({ globalLog, setGlobalLog, files }) {
       : source;
   }, [activeLog, globalLog, keyword, selectedFile]);
 
-  // Kiểm tra vị trí scrollbar khi user kéo
+  // Theo dõi vị trí scrollbar của người dùng
   const handleLogScroll = () => {
     const container = logContainerRef.current;
 
@@ -101,11 +102,13 @@ export default function SystemLogs({ globalLog, setGlobalLog, files }) {
       container.scrollTop -
       container.clientHeight;
 
-    // Cho phép sai số 20px để coi như đang ở cuối
+    // Sai số 20px để coi như đang ở cuối
     isAtBottomRef.current = distanceFromBottom <= 20;
   };
 
-  // Chỉ tự scroll khi user đang ở cuối
+  // Khi có log mới:
+  // - Nếu đang ở cuối -> tự cuộn xuống
+  // - Nếu đang xem log cũ -> giữ nguyên vị trí
   useEffect(() => {
     const container = logContainerRef.current;
 
@@ -116,8 +119,7 @@ export default function SystemLogs({ globalLog, setGlobalLog, files }) {
     }
   }, [visibleLogs]);
 
-  // Khi chuyển sang tab log khác,
-  // đưa scrollbar xuống cuối của tab đó
+  // Khi đổi tab log -> luôn đưa về cuối
   useEffect(() => {
     const container = logContainerRef.current;
 
@@ -183,7 +185,6 @@ export default function SystemLogs({ globalLog, setGlobalLog, files }) {
         ))}
       </div>
 
-      {/* Log container */}
       <div
         ref={logContainerRef}
         onScroll={handleLogScroll}
@@ -199,11 +200,11 @@ export default function SystemLogs({ globalLog, setGlobalLog, files }) {
               key={`${log.time}-${index}`}
               className="mb-1 leading-relaxed"
             >
-             {log.time && (
-  <span className="text-slate-500 select-none">
-    [{log.time}]{' '}
-  </span>
-)}
+              {log.time && (
+                <span className="text-slate-500 select-none">
+                  [{log.time]}{' '}
+                </span>
+              )}
 
               <span
                 className={
