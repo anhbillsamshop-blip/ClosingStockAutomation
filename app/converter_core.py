@@ -15,6 +15,7 @@ import duckdb
 Log = Callable[[str], None]
 
 
+
 @dataclass(frozen=True)
 class ConverterProfile:
     key: str
