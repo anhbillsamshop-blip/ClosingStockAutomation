@@ -72,7 +72,7 @@ PROFILES = {
         input_folder=Path(r"\\masan.local\15. Khoi Logistics\99.15.1. Inputdata\99.15.9 RAW"),
         delimiter=",",
         timestamp_format="%Y%m%d",
-        all_varchar=False,
+        all_varchar=True,
         has_header=True,
     ),
 }
@@ -128,6 +128,14 @@ def _parse_line(line: str, delimiter: str) -> list[str]:
         if char == '"':
             if in_quotes:
                 if index + 1 < len(line) and line[index + 1] == '"':
+                    # Repair SCCT rows such as `...6"",Flop,...` where the
+                    # final quote was written as a literal quote plus the
+                    # closing quote, without the third escape quote.
+                    if index + 2 == len(line) or line[index + 2] == delimiter:
+                        current.append('"')
+                        in_quotes = False
+                        index += 2
+                        continue
                     current.append('"')
                     index += 2
                     continue
@@ -283,7 +291,9 @@ def convert_normalized(
         "parallel = true",
     ]
 
-    if profile.all_varchar:
+    if profile.all_varchar and profile.has_header:
+        options.extend(["all_varchar = true", "quote = '\"'", "escape = '\"'"])
+    elif profile.all_varchar:
         with normalized_csv.open("r", encoding="utf-8", newline="") as handle:
             first_row = next(csv.reader(handle, delimiter=profile.delimiter), None)
         if not first_row:

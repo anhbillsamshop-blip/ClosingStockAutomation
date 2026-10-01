@@ -75,7 +75,7 @@ def run_python_file(filename):
     # input("Nhấn Enter để đóng...")
     # trong các file con.
     result = subprocess.run(
-        [sys.executable, str(script_path)],
+        [sys.executable, "-u", str(script_path)],
         cwd=str(APP_FOLDER),
         input="\n",
         text=True,
